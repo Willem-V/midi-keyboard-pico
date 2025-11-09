@@ -28,30 +28,37 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(keyboard C CXX ASM)
+project(midi_keyboard C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(keyboard keyboard.c )
-
-pico_set_program_name(keyboard "keyboard")
-pico_set_program_version(keyboard "0.1")
-
-# Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(keyboard 0)
-pico_enable_stdio_usb(keyboard 0)
-
-# Add the standard library to the build
-target_link_libraries(keyboard
-        pico_stdlib)
-
-# Add the standard include files to the build
-target_include_directories(keyboard PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
+add_executable(midi_keyboard
+    src/keyboard.c
+    src/usb_midi.c
+    src/usb_descriptors.c
 )
 
-pico_add_extra_outputs(keyboard)
+pico_set_program_name(midi_keyboard "midi_keyboard")
+pico_set_program_version(midi_keyboard "0.1")
 
+# Modify the below lines to enable/disable output over UART/USB
+# Note: stdio USB is disabled to avoid conflicts with USB MIDI
+pico_enable_stdio_uart(midi_keyboard 0)
+pico_enable_stdio_usb(midi_keyboard 0)
+
+# Add the standard library to the build
+target_link_libraries(midi_keyboard
+    pico_stdlib
+    tinyusb_device
+    tinyusb_board
+)
+
+# Add the standard include files to the build
+target_include_directories(midi_keyboard PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/include
+)
+
+pico_add_extra_outputs(midi_keyboard)

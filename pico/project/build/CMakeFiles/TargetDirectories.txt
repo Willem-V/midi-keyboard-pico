@@ -1,2 +1,0 @@
-/home/willem/projects/midi-keyboard-pico/pico/project/build/CMakeFiles/edit_cache.dir
-/home/willem/projects/midi-keyboard-pico/pico/project/build/CMakeFiles/rebuild_cache.dir
