@@ -1,4 +1,5 @@
 #include "usb_midi.h"
+#include "tusb_config.h"
 
 // Called in main loop
 void usb_midi_task(void) {
@@ -7,6 +8,7 @@ void usb_midi_task(void) {
 
 // Send a single Note On/Off message
 void usb_midi_send_note(uint8_t note, bool on) {
+#if CFG_TUD_MIDI
     uint8_t cable_num = 0; // Virtual cable
     uint8_t channel   = 0; // MIDI channel 1
 
@@ -22,4 +24,9 @@ void usb_midi_send_note(uint8_t note, bool on) {
     }
 
     tud_midi_stream_write(cable_num, msg, 3);
+#else
+    // MIDI disabled - no-op
+    (void)note;
+    (void)on;
+#endif
 }
