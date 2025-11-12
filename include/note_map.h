@@ -21,53 +21,188 @@
 // Special value for unmapped keys
 #define NOTE_NONE       0xFF
 
+// MIDI Note Definitions (Note Name = MIDI Number)
+// Octave -1
+#define C_1   0
+#define Cs_1  1
+#define D_1   2
+#define Ds_1  3
+#define E_1   4
+#define F_1   5
+#define Fs_1  6
+#define G_1   7
+#define Gs_1  8
+#define A_1   9
+#define As_1  10
+#define B_1   11
+
+// Octave 0
+#define C0   12
+#define Cs0  13
+#define D0   14
+#define Ds0  15
+#define E0   16
+#define F0   17
+#define Fs0  18
+#define G0   19
+#define Gs0  20
+#define A0   21
+#define As0  22
+#define B0   23
+
+// Octave 1
+#define C1   24
+#define Cs1  25
+#define D1   26
+#define Ds1  27
+#define E1   28
+#define F1   29
+#define Fs1  30
+#define G1   31
+#define Gs1  32
+#define A1   33
+#define As1  34
+#define B1   35
+
+// Octave 2
+#define C2   36
+#define Cs2  37
+#define D2   38
+#define Ds2  39
+#define E2   40
+#define F2   41
+#define Fs2  42
+#define G2   43
+#define Gs2  44
+#define A2   45
+#define As2  46
+#define B2   47
+
+// Octave 3
+#define C3   48
+#define Cs3  49
+#define D3   50
+#define Ds3  51
+#define E3   52
+#define F3   53
+#define Fs3  54
+#define G3   55
+#define Gs3  56
+#define A3   57
+#define As3  58
+#define B3   59
+
+// Octave 4 (Middle C = C4 = 60)
+#define C4   60
+#define Cs4  61
+#define D4   62
+#define Ds4  63
+#define E4   64
+#define F4   65
+#define Fs4  66
+#define G4   67
+#define Gs4  68
+#define A4   69  // A440 concert pitch
+#define As4  70
+#define B4   71
+
+// Octave 5
+#define C5   72
+#define Cs5  73
+#define D5   74
+#define Ds5  75
+#define E5   76
+#define F5   77
+#define Fs5  78
+#define G5   79
+#define Gs5  80
+#define A5   81
+#define As5  82
+#define B5   83
+
+// Octave 6
+#define C6   84
+#define Cs6  85
+#define D6   86
+#define Ds6  87
+#define E6   88
+#define F6   89
+#define Fs6  90
+#define G6   91
+#define Gs6  92
+#define A6   93
+#define As6  94
+#define B6   95
+
+// Octave 7
+#define C7   96
+#define Cs7  97
+#define D7   98
+#define Ds7  99
+#define E7   100
+#define F7   101
+#define Fs7  102
+#define G7   103
+#define Gs7  104
+#define A7   105
+#define As7  106
+#define B7   107
+
+// Octave 8
+#define C8   108
+#define Cs8  109
+#define D8   110
+#define Ds8  111
+#define E8   112
+#define F8   113
+#define Fs8  114
+#define G8   115
+#define Gs8  116
+#define A8   117
+#define As8  118
+#define B8   119
+
+// Octave 9
+#define C9   120
+#define Cs9  121
+#define D9   122
+#define Ds9  123
+#define E9   124
+#define F9   125
+#define Fs9  126
+#define G9   127  // Highest MIDI note
+
 /*
  * Note mapping array: note_map[drive_pin][read_pin] = MIDI_note
  *
- * Current mapping: Chromatic layout starting at C2 (MIDI note 36)
- * This gives a range of C2 to C12 (notes 36-156), though most software
- * only supports up to G9 (127).
+ * EXPERIMENTAL MAPPING:
+ * Each matrix position gets a unique note for testing/discovery.
+ * Press each physical key and note which MIDI note it produces.
+ * This helps you map the physical keyboard layout to matrix positions.
  *
- * Customize this array to match your physical keyboard layout.
- * For example, you might want:
- * - Piano layout (white keys + black keys)
- * - Chromatic layout (every semitone)
- * - Custom button mapping
+ * Matrix: 11 rows × 11 columns = 121 positions
+ * Notes assigned: 21 (A0) through 127 (G9) sequentially
+ *
+ * To find your physical key mapping:
+ * 1. Flash this firmware
+ * 2. Connect to MIDI monitor software
+ * 3. Press each key and record which note it produces
+ * 4. Update this array based on your findings
  */
 
 static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
-    // Drive 0 (Row 0): Notes 36-46 (C2 to Bb2)
-    { 36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46},
-
-    // Drive 1 (Row 1): Notes 47-57 (B2 to A3)
-    { 47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57},
-
-    // Drive 2 (Row 2): Notes 58-68 (Bb3 to Ab4)
-    { 58,  59,  60,  61,  62,  63,  64,  65,  66,  67,  68},
-
-    // Drive 3 (Row 3): Notes 69-79 (A4 to G5)
-    { 69,  70,  71,  72,  73,  74,  75,  76,  77,  78,  79},
-
-    // Drive 4 (Row 4): Notes 80-90 (Ab5 to Gb6)
-    { 80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90},
-
-    // Drive 5 (Row 5): Notes 91-101 (G6 to F7)
-    { 91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101},
-
-    // Drive 6 (Row 6): Notes 102-112 (Gb7 to E8)
-    {102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112},
-
-    // Drive 7 (Row 7): Notes 113-123 (F8 to Eb9)
-    {113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123},
-
-    // Drive 8 (Row 8): Notes 124-127 + unmapped
-    {124, 125, 126, 127, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE},
-
-    // Drive 9 (Row 9): All unmapped (for future expansion)
-    {NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE},
-
-    // Drive 10 (Row 10): All unmapped (for future expansion)
-    {NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE}
+    //        Col:    0      1      2      3      4      5      6      7      8      9      10
+    /* Row 0 */  {   C0,   Cs0,    D0,   Ds0,    E0,    F0,   Fs0,    G0,   Gs0,    A0,   As0  },
+    /* Row 1 */  {   B0,    C1,   Cs1,    D1,   Ds1,    E1,    F1,   Fs1,    G1,   Gs1,    A1  },
+    /* Row 2 */  {  As1,    B1,    C2,   Cs2,    D2,   Ds2,    E2,    F2,   Fs2,    G2,   Gs2  },
+    /* Row 3 */  {   A2,   As2,    B2,    C3,   Cs3,    D3,   Ds3,    E3,    F3,   Fs3,    G3  },
+    /* Row 4 */  {  Gs3,    A3,   As3,    B3,    C4,   Cs4,    D4,   Ds4,    E4,    F4,   Fs4  },
+    /* Row 5 */  {   G4,   Gs4,    A4,   As4,    B4,    C5,   Cs5,    D5,   Ds5,    E5,    F5  },
+    /* Row 6 */  {  Fs5,    G5,   Gs5,    A5,   As5,    B5,    C6,   Cs6,    D6,   Ds6,    E6  },
+    /* Row 7 */  {   F6,   Fs6,    G6,   Gs6,    A6,   As6,    B6,    C7,   Cs7,    D7,   Ds7  },
+    /* Row 8 */  {   E7,    F7,   Fs7,    G7,   Gs7,    A7,   As7,    B7,    C8,   Cs8,    D8  },
+    /* Row 9 */  {  Ds8,    E8,    F8,   Fs8,    G8,   Gs8,    A8,   As8,    B8,    C9,   Cs9  },
+    /* Row 10*/  {   D9,   Ds9,    E9,    F9,   Fs9,    G9,   C_1,  Cs_1,   D_1,  Ds_1,   E_1  }
 };
 
 /*

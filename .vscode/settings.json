@@ -39,5 +39,8 @@
     "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
     "github.copilot.enable": {
         "*": false
+    },
+    "files.associations": {
+        "usb_midi.h": "c"
     }
 }
