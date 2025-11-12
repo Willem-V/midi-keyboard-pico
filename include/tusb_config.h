@@ -47,6 +47,9 @@
 // Default is max speed that hardware controller could support with on-chip PHY
 #define CFG_TUD_MAX_SPEED     BOARD_TUD_MAX_SPEED
 
+// RHPort mode configuration
+#define CFG_TUSB_RHPORT0_MODE (OPT_MODE_DEVICE)
+
 /* USB DMA on some MCUs can only access a specific SRAM region with restriction on alignment.
  * Tinyusb use follows macros to declare transferring memory so that they can be put
  * into those specific section.
@@ -71,15 +74,11 @@
 #endif
 
 //------------- CLASS -------------//
-#define CFG_TUD_CDC               1  // Enable serial debug output
+#define CFG_TUD_CDC               0
 #define CFG_TUD_MSC               0
 #define CFG_TUD_HID               0
-#define CFG_TUD_MIDI              0  // DISABLED for testing
+#define CFG_TUD_MIDI              1
 #define CFG_TUD_VENDOR            0
-
-// CDC FIFO size of TX and RX
-#define CFG_TUD_CDC_RX_BUFSIZE    64
-#define CFG_TUD_CDC_TX_BUFSIZE    64
 
 // MIDI FIFO size of TX and RX
 #define CFG_TUD_MIDI_RX_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)

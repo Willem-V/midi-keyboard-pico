@@ -37,18 +37,26 @@ pico_sdk_init()
 
 add_executable(midi_keyboard
     src/keyboard.c
+    src/usb_descriptors.c
 )
 
 pico_set_program_name(midi_keyboard "midi_keyboard")
 pico_set_program_version(midi_keyboard "0.1")
 
-# Enable USB output, disable UART output (like hello_usb example)
+# Disable STDIO - we're using MIDI only
 pico_enable_stdio_uart(midi_keyboard 0)
-pico_enable_stdio_usb(midi_keyboard 1)
+pico_enable_stdio_usb(midi_keyboard 0)
 
-# Only link pico_stdlib (like hello_usb example)
+# Add back TinyUSB libraries to use custom descriptors
 target_link_libraries(midi_keyboard
     pico_stdlib
+    tinyusb_device
+    tinyusb_board
+)
+
+# Add include directory for tusb_config.h
+target_include_directories(midi_keyboard PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
 pico_add_extra_outputs(midi_keyboard)
