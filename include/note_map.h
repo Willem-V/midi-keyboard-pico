@@ -190,19 +190,23 @@
  * 4. Update this array based on your findings
  */
 
+// FUNCTIONAL MAPPING - Based on experimental test results
+// Each matrix position maps to the piano key it physically activates
+// Unmapped positions use NOTE_NONE
+
 static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
-    //        Col:    0      1      2      3      4      5      6      7      8      9      10
-    /* Row 0 */  {   C0,   Cs0,    D0,   Ds0,    E0,    F0,   Fs0,    G0,   Gs0,    A0,   As0  },
-    /* Row 1 */  {   B0,    C1,   Cs1,    D1,   Ds1,    E1,    F1,   Fs1,    G1,   Gs1,    A1  },
-    /* Row 2 */  {  As1,    B1,    C2,   Cs2,    D2,   Ds2,    E2,    F2,   Fs2,    G2,   Gs2  },
-    /* Row 3 */  {   A2,   As2,    B2,    C3,   Cs3,    D3,   Ds3,    E3,    F3,   Fs3,    G3  },
-    /* Row 4 */  {  Gs3,    A3,   As3,    B3,    C4,   Cs4,    D4,   Ds4,    E4,    F4,   Fs4  },
-    /* Row 5 */  {   G4,   Gs4,    A4,   As4,    B4,    C5,   Cs5,    D5,   Ds5,    E5,    F5  },
-    /* Row 6 */  {  Fs5,    G5,   Gs5,    A5,   As5,    B5,    C6,   Cs6,    D6,   Ds6,    E6  },
-    /* Row 7 */  {   F6,   Fs6,    G6,   Gs6,    A6,   As6,    B6,    C7,   Cs7,    D7,   Ds7  },
-    /* Row 8 */  {   E7,    F7,   Fs7,    G7,   Gs7,    A7,   As7,    B7,    C8,   Cs8,    D8  },
-    /* Row 9 */  {  Ds8,    E8,    F8,   Fs8,    G8,   Gs8,    A8,   As8,    B8,    C9,   Cs9  },
-    /* Row 10*/  {   D9,   Ds9,    E9,    F9,   Fs9,    G9,   C_1,  Cs_1,   D_1,  Ds_1,   E_1  }
+    //           Col:     0         1         2         3         4         5         6         7         8         9         10
+    /* Row 0 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE,      C6,  NOTE_NONE,      C7,  NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row 1 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE,     As4,  NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row 2 */  {     Fs4,      C4,     F5,     As5,     Fs6,  NOTE_NONE,      C5,      C2,     Fs2,      C3,     Fs3  },
+    /* Row 3 */  {     As3,      E4,      E5,      E6,     As6,  NOTE_NONE, NOTE_NONE,      E2,     As2,      E3,  NOTE_NONE },
+    /* Row 4 */  {      D4,     Gs3,      D5,  NOTE_NONE,      D6,     Gs6,  NOTE_NONE, NOTE_NONE,       D2,     Gs2,      D3  },
+    /* Row 5 */  {      G3,     Cs4,      G6,     Cs5,     Gs5,     Cs6,     Gs4,  NOTE_NONE,     Cs2,      G2,     Cs3  },
+    /* Row 6 */  {     Ds4,      A3,     Ds5,      G5,     Ds6,      A6,      G4,  NOTE_NONE,     Ds2,      A2,     Ds3  },
+    /* Row 7 */  {      B3,      F4,      F5,      A5,      F6,      B6,      B4,      F2,      B2,      F3,  NOTE_NONE },
+    /* Row 8 */  { NOTE_NONE, NOTE_NONE,      B5,  NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row 9 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row 10*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE,      A4,  NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE }
 };
 
 /*

@@ -16,7 +16,7 @@
 
 // Scanning config
 #define DEBOUNCE_TIME_US   5000
-#define SCAN_SETTLE_US     2
+#define SCAN_SETTLE_US     50  // Increased from 2 to 50 for better signal stability
 
 // Key state tracking
 typedef struct {
