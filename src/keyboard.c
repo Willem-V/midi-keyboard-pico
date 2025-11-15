@@ -12,11 +12,12 @@
 // Hardware pins
 #define LED_PIN 25
 #define DRIVE0  0
-#define READ0   11
+#define READ0   12
 
-// Scanning config
+// Scanning config - SUPER SLOW for debugging
 #define DEBOUNCE_TIME_US   5000
-#define SCAN_SETTLE_US     50  // Increased from 2 to 50 for better signal stability
+#define SCAN_SETTLE_US     5000  // 5ms = 5000μs - VERY slow to eliminate timing issues
+#define INTER_ROW_DELAY_US 2000  // 2ms delay between switching rows
 
 // Key state tracking
 typedef struct {
@@ -25,11 +26,11 @@ typedef struct {
 } key_state_t;
 
 static key_state_t key_states[NUM_DRIVE_PINS][NUM_READ_PINS];
-static const uint32_t READ_PIN_MASK = 0x003FF800; // Bits 11-21
+static const uint32_t READ_PIN_MASK = 0x047FF000; // Bits 12-22 + bit 26 (12 pins)
 
 // Initialize GPIO for matrix
 static void init_matrix_pins(void) {
-    // Drive pins: outputs, default LOW
+    // Drive pins: outputs, default LOW (GPIO 0-11)
     for (int pin = DRIVE0; pin <= DRIVE0 + NUM_DRIVE_PINS - 1; ++pin) {
         gpio_init(pin);
         gpio_set_dir(pin, GPIO_OUT);
@@ -37,11 +38,16 @@ static void init_matrix_pins(void) {
     }
 
     // Read pins: inputs with pull-down
-    for (int pin = READ0; pin <= READ0 + NUM_READ_PINS - 1; ++pin) {
+    // GPIO 12-22 (11 pins)
+    for (int pin = 12; pin <= 22; ++pin) {
         gpio_init(pin);
         gpio_set_dir(pin, GPIO_IN);
         gpio_pull_down(pin);
     }
+    // GPIO 26 (1 pin)
+    gpio_init(26);
+    gpio_set_dir(26, GPIO_IN);
+    gpio_pull_down(26);
 
     // LED
     gpio_init(LED_PIN);
@@ -49,12 +55,22 @@ static void init_matrix_pins(void) {
 }
 
 // Scan one row efficiently
+// Columns 0-10 = GPIO 12-22, Column 11 = GPIO 26
 static inline uint16_t scan_row(uint8_t drive_pin) {
     gpio_put(drive_pin, 1);
     busy_wait_us_32(SCAN_SETTLE_US);
     uint32_t gpio_state = gpio_get_all();
     gpio_put(drive_pin, 0);
-    return (gpio_state & READ_PIN_MASK) >> READ0;
+
+    // Extract GPIO 12-22 to columns 0-10 (11 bits)
+    uint16_t result = (gpio_state >> 12) & 0x7FF;
+
+    // Extract GPIO 26 to column 11
+    if (gpio_state & (1 << 26)) {
+        result |= (1 << 11);
+    }
+
+    return result;
 }
 
 // Send MIDI note on/off
@@ -95,6 +111,9 @@ static void scan_matrix(void) {
                 }
             }
         }
+
+        // Delay between rows to ensure complete settling
+        busy_wait_us_32(INTER_ROW_DELAY_US);
     }
 }
 

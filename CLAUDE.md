@@ -16,8 +16,14 @@ midi-keyboard-pico/
 │   ├── keyboard.c         # Keyboard matrix scanning (11x11 GPIO matrix)
 │   └── usb_midi.c         # USB MIDI implementation
 ├── include/
+│   ├── note_map.h         # Key-to-MIDI-note mapping (DEBUG/FUNCTIONAL modes)
 │   └── usb_midi.h         # USB MIDI interface
 ├── build/                 # Build output (generated)
+├── tools/                 # Python tools for key mapping
+│   ├── map_keys.py        # Interactive MIDI key mapper
+│   ├── requirements.txt   # Python dependencies
+│   └── README.md          # Tool documentation
+├── test_results/          # Mapping test results
 ├── .vscode/               # VSCode configuration
 ├── examples/              # Reference examples from development
 │   ├── gpio-test/        # Simple GPIO hardware validation
@@ -25,6 +31,7 @@ midi-keyboard-pico/
 ├── pico/
 │   ├── pico-sdk/         # Raspberry Pi Pico SDK (v2.2.0)
 │   └── pico-examples/    # SDK examples
+├── environment.yml        # Conda environment for Python tools
 ├── CMakeLists.txt        # Main project build configuration
 ├── pico_sdk_import.cmake # SDK locator
 └── .gitignore
@@ -110,3 +117,45 @@ Reference code in `examples/` directory:
 - **initial-midi**: Early USB MIDI prototype with basic GPIO testing
 
 These are kept as development references but not actively maintained.
+
+## Python Tools for Key Mapping
+
+The `tools/` directory contains Python utilities for mapping physical keys to the matrix.
+
+### Setup Python Environment
+
+**Using Conda (Recommended):**
+```bash
+conda env create -f environment.yml
+conda activate midi-keyboard-pico
+```
+
+**Using pip:**
+```bash
+pip install -r tools/requirements.txt
+```
+
+### Key Mapping Tool (tools/map_keys.py)
+
+Interactive tool to discover which matrix positions each physical key triggers:
+
+1. Enable `#define DEBUG_MAPPING` in `include/note_map.h`
+2. Build and flash firmware
+3. Run: `python tools/map_keys.py`
+4. Press each key as prompted (C2 → C7)
+5. Tool generates:
+   - `test_results/key_mapping.json` - Raw mapping data
+   - `test_results/key_mapping.md` - Human-readable reference
+   - `generated_note_map.c` - C code for functional mapping
+6. Copy generated array into `note_map.h` and rebuild
+
+See `tools/README.md` for detailed instructions.
+
+### Note Mapping (include/note_map.h)
+
+Two mapping modes controlled by `#define DEBUG_MAPPING`:
+
+- **DEBUG_MAPPING**: Sequential notes C_1 (0) → C9 (120) for discovering matrix positions
+- **FUNCTIONAL**: Maps matrix positions to actual piano keys (C2 → C7)
+
+The Python tool uses DEBUG mode to discover the mapping, then generates the FUNCTIONAL mapping.

@@ -1,0 +1,10 @@
+name: midi-keyboard-pico
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - mido>=1.2.10
+    - python-rtmidi>=1.4.9

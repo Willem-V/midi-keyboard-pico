@@ -2,3 +2,19 @@ build
 !.vscode/*
 .claude/
 pico/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+
+# Generated files
+generated_note_map.c
+test_results/key_mapping.json
+test_results/key_mapping.md
