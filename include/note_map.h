@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 // Uncomment to enable DEBUG mode (sequential note mapping for testing)
-#define DEBUG_MAPPING
+// #define DEBUG_MAPPING
 
 // Total matrix dimensions
 #define NUM_DRIVE_PINS  12  // GPIO 0-11
@@ -250,17 +250,17 @@ static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
 static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
     //           Col:     0         1         2         3         4         5         6         7         8         9         10        11
     //           GPIO:   12        13        14        15        16        17        18        19        20        21        22        26
-    /* Row 0 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 1 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 2 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 3 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 4 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 5 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 6 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 7 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 8 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 9 */  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
-    /* Row 10*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  0*/  {       Fs4,        C4,       Fs5,        C6,       Fs6,        C7,        C5,        C2,        Fs2,        C3,        Fs3, NOTE_NONE },
+    /* Row  1*/  {        E4,       As3,        E5,       As5,        E6,       As6,       As4, NOTE_NONE,        E2,       As2,        E3, NOTE_NONE },
+    /* Row  2*/  {        D4,       Gs3,        D5,       Gs5,        D6,       Gs6,       Gs4, NOTE_NONE,        D2,       Gs2,        D3, NOTE_NONE },
+    /* Row  3*/  {       Fs4,        C4,       Fs5,        C6,       Fs6,        C7,        C5,        C2,       Fs2,        C3,       Fs3, NOTE_NONE },
+    /* Row  4*/  {        E4,       As3,        E5,       As5,        E6,       As6,       As4, NOTE_NONE,        E2,       As2,        E3, NOTE_NONE },
+    /* Row  5*/  {        D4,       Gs3,        D5,       Gs5,        D6,       Gs6,       Gs4, NOTE_NONE,        D2,       Gs2,        D3, NOTE_NONE },
+    /* Row  6*/  {       Cs4,        G3,       Cs5,        G5,       Cs6,        G6,        G4, NOTE_NONE,       Cs2,        G2,       Cs3, NOTE_NONE },
+    /* Row  7*/  {       Ds4,        A3,       Ds5,        A5,       Ds6,        A6,        A4, NOTE_NONE,       Ds2,        A2,       Ds3, NOTE_NONE },
+    /* Row  8*/  {        F4,        B3,        F5,        B5,        F6,        B6,        B4, NOTE_NONE,        F2,        B2,        F3, NOTE_NONE },
+    /* Row  9*/  {       Cs4,        G3,       Cs5,        G5,       Cs6,        G6,        G4, NOTE_NONE,       Cs2,        G2,       Cs3, NOTE_NONE },
+    /* Row 10*/  {       Ds4,        A3,       Ds5,        A5,       Ds6,        A6,        A4, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
     /* Row 11*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE }
 };
 #endif

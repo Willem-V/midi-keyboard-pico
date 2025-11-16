@@ -17,7 +17,7 @@
 // Scanning config - SUPER SLOW for debugging
 #define DEBOUNCE_TIME_US   5000
 #define SCAN_SETTLE_US     5000  // 5ms = 5000μs - VERY slow to eliminate timing issues
-#define INTER_ROW_DELAY_US 2000  // 2ms delay between switching rows
+#define INTER_ROW_DELAY_US 1000  // 5ms delay between switching rows
 
 // Key state tracking
 typedef struct {
