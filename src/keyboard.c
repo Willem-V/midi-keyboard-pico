@@ -28,8 +28,8 @@
 
 // Velocity timing constants (in microseconds)
 #define VELOCITY_TIMEOUT_US     150000  // 150ms - timeout for second sensor
-#define VELOCITY_MIN_TIME_US    5000    // 5ms - fastest possible press (velocity 127)
-#define VELOCITY_MAX_TIME_US    100000  // 100ms - slowest press (velocity 1)
+#define VELOCITY_MIN_TIME_US    2000    // 5ms - fastest possible press (velocity 127)
+#define VELOCITY_MAX_TIME_US    80000  // 100ms - slowest press (velocity 1)
 #define VELOCITY_DEFAULT        64      // Default velocity for single-sensor keys
 
 // Velocity curve (linear mapping)
