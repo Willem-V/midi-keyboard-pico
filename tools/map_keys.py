@@ -14,8 +14,9 @@ from typing import List, Tuple, Dict
 import mido
 
 # Debug mapping: matrix position to MIDI note number
-# Matrix: 12×12 = 144 positions. MIDI notes: 0-127 (128 total).
-# Positions 0-127 map to notes 0-127, positions 128-143 wrap to notes 0-15.
+# Matrix: 12×12 = 144 positions.
+# Positions 0-127: sent as notes 0-127 on channel 0
+# Positions 128-143: sent as notes 0-15 on channel 1
 # Columns: 0-10 = GPIO 12-22, Column 11 = GPIO 26
 # This matches the DEBUG_MAPPING in note_map.h
 DEBUG_MAPPING = [
@@ -39,10 +40,10 @@ DEBUG_MAPPING = [
     [96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107],
     # Row 9: 108-119
     [108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119],
-    # Row 10: 120-127, 0-3 (wraps at 128)
-    [120, 121, 122, 123, 124, 125, 126, 127, 0, 1, 2, 3],
-    # Row 11: 4-15
-    [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    # Row 10: 120-131 (positions 120-127 on ch0, 128-131 on ch1 as notes 0-3)
+    [120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131],
+    # Row 11: 132-143 (on ch1 as notes 4-15)
+    [132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143]
 ]
 
 # MIDI note names and numbers for a 61-key keyboard (C2 to C7)
@@ -67,11 +68,18 @@ KEYS_TO_MAP = [
 ]
 
 
-def note_to_matrix_position(note: int) -> Tuple[int, int]:
-    """Convert MIDI note number to matrix [row, col] using DEBUG_MAPPING."""
+def note_to_matrix_position(note: int, channel: int = 0) -> Tuple[int, int]:
+    """
+    Convert MIDI note number + channel to matrix [row, col] using DEBUG_MAPPING.
+    Channel 0: positions 0-127 (notes 0-127)
+    Channel 1: positions 128-143 (notes 0-15 on channel 1)
+    """
+    # For channel 1, convert to position number (128 + note)
+    position = note if channel == 0 else (128 + note)
+
     for row in range(12):
         for col in range(12):
-            if DEBUG_MAPPING[row][col] == note:
+            if DEBUG_MAPPING[row][col] == position:
                 return (row, col)
     return None
 
@@ -104,46 +112,80 @@ def select_midi_port() -> mido.ports.BaseInput:
             exit(0)
 
 
-def capture_key_press(port: mido.ports.BaseInput, timeout: float = 3.0) -> List[int]:
+def capture_key_press(port: mido.ports.BaseInput) -> Dict:
     """
     Capture MIDI Note On events for a single key press.
-    Returns list of note numbers (typically 2 for dual velocity sensors).
+    User presses key, then presses Enter to confirm or 'r' to retry.
+    Returns dict with notes, channels, and sensor order info.
     """
-    notes = []
-    start_time = time.time()
-    note_on_seen = False
-    settle_time = 0.5  # Wait 500ms after first note for dual sensors
+    import sys
+    import select
 
-    print("  Listening... ", end="", flush=True)
+    note_triggers = []  # List of (note, channel, timestamp) tuples
+
+    print("  Press key, then Enter to confirm (or 'r' + Enter to retry): ", end="", flush=True)
 
     while True:
-        # Check timeout
-        if time.time() - start_time > timeout:
-            if not notes:
-                print("TIMEOUT (no key pressed)")
-                return None
-            break
-
         # Check for MIDI messages
         msg = port.poll()
-        if msg is None:
+        if msg is not None and msg.type == 'note_on':
+            # Check if this note+channel hasn't been seen yet
+            seen = [(note, ch) for note, ch, _ in note_triggers]
+            if (msg.note, msg.channel) not in seen:
+                timestamp = time.time()
+                note_triggers.append((msg.note, msg.channel, timestamp))
+                ch_str = f" ch{msg.channel}" if msg.channel > 0 else ""
+                print(f"\n  Detected note {msg.note}{ch_str}...", end="", flush=True)
+
+        # Check for user input (Enter or 'r')
+        # Non-blocking check for user input (Enter or 'r')
+        ready, _, _ = select.select([sys.stdin], [], [], 0)
+        if ready:
+            user_input = sys.stdin.readline()
+            if user_input is None:
+                user_input = ""
+            else:
+                user_input = user_input.rstrip("\n")
+        else:
+            # No user input yet; wait a tiny bit and continue polling MIDI
             time.sleep(0.01)
             continue
 
-        # Process Note On messages
-        if msg.type == 'note_on' and msg.velocity > 0:
-            if msg.note not in notes:
-                notes.append(msg.note)
-                print(f"note {msg.note} ", end="", flush=True)
-                note_on_seen = True
-                start_time = time.time()  # Reset timeout on each new note
-
-        # If we've seen notes and enough time has passed, we're done
-        if note_on_seen and (time.time() - start_time > settle_time):
+        if user_input.lower().strip() == 'r':
+            print("  Retrying... ", end="", flush=True)
+            return {'retry': True}
+        else:
+            # User pressed Enter - done capturing
             break
 
-    print(f"✓ Captured {len(notes)} note(s)")
-    return notes
+    # Determine trigger order
+    result = {
+        'count': len(note_triggers)
+    }
+
+    # If dual sensors detected, record which triggered first
+    if len(note_triggers) == 2:
+        first_note, first_ch, _ = note_triggers[0]
+        second_note, second_ch, _ = note_triggers[1]
+
+        result['first_sensor'] = (first_note, first_ch)
+        result['second_sensor'] = (second_note, second_ch)
+
+        ch1_str = f" ch{first_ch}" if first_ch > 0 else ""
+        ch2_str = f" ch{second_ch}" if second_ch > 0 else ""
+        print(f"✓ Dual sensors: {first_note}{ch1_str} (first) → {second_note}{ch2_str} (second)")
+    elif len(note_triggers) == 1:
+        note, ch, _ = note_triggers[0]
+        result['first_sensor'] = (note, ch)
+        result['second_sensor'] = None
+        ch_str = f" ch{ch}" if ch > 0 else ""
+        print(f"✓ Single sensor: {note}{ch_str}")
+    else:
+        result['first_sensor'] = None
+        result['second_sensor'] = None
+        print(f"✓ Captured {len(note_triggers)} note(s)")
+
+    return result
 
 
 def map_all_keys(port: mido.ports.BaseInput) -> Dict:
@@ -155,24 +197,26 @@ def map_all_keys(port: mido.ports.BaseInput) -> Dict:
     print(f"MAPPING {total_keys} KEYS (C2 to C7)")
     print(f"{'='*60}")
     print("\nInstructions:")
-    print("  - Press and release the requested key")
-    print("  - Press 'r' + Enter to retry current key")
-    print("  - Press 's' + Enter to skip current key")
-    print("  - Press Ctrl+C to quit and save partial results\n")
+    print("  1. Press the requested piano key")
+    print("  2. Press Enter to confirm")
+    print("  3. Or type 'r' + Enter to retry")
+    print("  4. Press Ctrl+C to quit and save partial results\n")
 
     for idx, (key_name, expected_note) in enumerate(KEYS_TO_MAP):
-        print(f"\n[{idx+1}/{total_keys}] Press key: {key_name} (MIDI note {expected_note})")
+        print(f"\n[{idx+1}/{total_keys}] {key_name} (MIDI note {expected_note})")
 
         while True:
-            notes = capture_key_press(port)
+            capture_result = capture_key_press(port)
 
-            if notes is None:
-                # Timeout - ask to retry or skip
-                choice = input("  Retry (r), Skip (s), or Quit (q)? ").strip().lower()
-                if choice == 'r':
-                    continue
-                elif choice == 's':
-                    notes = []
+            # Check if user wants to retry
+            if capture_result.get('retry'):
+                continue
+
+            # Check if user wants to skip (empty capture)
+            if capture_result.get('count', 0) == 0:
+                choice = input("  No notes captured. Skip (s) or Quit (q)? ").strip().lower()
+                if choice == 's':
+                    capture_result = {'notes': [], 'count': 0, 'first_sensor': None, 'second_sensor': None}
                     break
                 elif choice == 'q':
                     print("\nQuitting...")
@@ -182,19 +226,35 @@ def map_all_keys(port: mido.ports.BaseInput) -> Dict:
             else:
                 break
 
-        # Map notes to matrix positions
+        # Extract sensor info (now tuples of (note, channel))
+        first_sensor = capture_result.get('first_sensor')
+        second_sensor = capture_result.get('second_sensor')
+
+        # Map sensors to matrix positions
         positions = []
-        for note in notes:
-            pos = note_to_matrix_position(note)
+        if first_sensor:
+            note, ch = first_sensor
+            pos = note_to_matrix_position(note, ch)
             if pos:
                 positions.append(pos)
             else:
-                print(f"  WARNING: Note {note} not found in debug mapping!")
+                ch_str = f" ch{ch}" if ch > 0 else ""
+                print(f"  WARNING: Note {note}{ch_str} not found in debug mapping!")
+
+        if second_sensor:
+            note, ch = second_sensor
+            pos = note_to_matrix_position(note, ch)
+            if pos:
+                positions.append(pos)
+            else:
+                ch_str = f" ch{ch}" if ch > 0 else ""
+                print(f"  WARNING: Note {note}{ch_str} not found in debug mapping!")
 
         mapping[key_name] = {
             "expected_midi_note": expected_note,
-            "captured_notes": notes,
-            "matrix_positions": positions
+            "matrix_positions": positions,
+            "first_sensor": first_sensor,
+            "second_sensor": second_sensor
         }
 
         if positions:
@@ -220,16 +280,34 @@ def save_results(mapping: Dict):
     md_file = "test_results/key_mapping.md"
     with open(md_file, 'w') as f:
         f.write("# MIDI Key Mapping Results\n\n")
-        f.write("Generated by map_keys.py\n\n")
+        f.write("Generated by map_keys.py with velocity sensor ordering\n\n")
+        f.write("Format: Key (MIDI note): Positions [Sensor order: first → second]\n\n")
+
         for key_name, data in mapping.items():
-            notes = data['captured_notes']
             positions = data['matrix_positions']
+            first_sensor = data.get('first_sensor')
+            second_sensor = data.get('second_sensor')
+
             f.write(f"**{key_name}** (MIDI {data['expected_midi_note']}): ")
             if positions:
                 pos_str = ", ".join([f"[{r},{c}]" for r, c in positions])
-                f.write(f"Notes {notes} → Positions {pos_str}\n")
+                f.write(f"Positions {pos_str}")
+
+                # Add sensor order if available
+                if first_sensor and second_sensor:
+                    note1, ch1 = first_sensor
+                    note2, ch2 = second_sensor
+                    ch1_str = f" ch{ch1}" if ch1 > 0 else ""
+                    ch2_str = f" ch{ch2}" if ch2 > 0 else ""
+                    f.write(f" [Sensors: {note1}{ch1_str} (1st) → {note2}{ch2_str} (2nd)]")
+                elif first_sensor:
+                    note1, ch1 = first_sensor
+                    ch1_str = f" ch{ch1}" if ch1 > 0 else ""
+                    f.write(f" [Single sensor: {note1}{ch1_str}]")
+
+                f.write("\n")
             else:
-                f.write(f"Notes {notes} (no mapping)\n")
+                f.write(f"(no mapping)\n")
     print(f"✓ Saved Markdown to: {md_file}")
 
     # 3. Generate C code for note_map array
@@ -239,43 +317,77 @@ def save_results(mapping: Dict):
 
 
 def generate_c_code(mapping: Dict, output_file: str):
-    """Generate C code for the functional note_map array."""
+    """Generate C code for two note_map arrays (first and second sensors)."""
 
-    # Initialize 12x12 matrix with NOTE_NONE
-    note_map = [["NOTE_NONE" for _ in range(12)] for _ in range(12)]
+    # Initialize two 12x12 matrices with NOTE_NONE
+    first_sensor_map = [["NOTE_NONE" for _ in range(12)] for _ in range(12)]
+    second_sensor_map = [["NOTE_NONE" for _ in range(12)] for _ in range(12)]
 
-    # Fill in the matrix based on mapping
+    # Fill in the matrices based on sensor order
     for key_name, data in mapping.items():
         expected_note = data['expected_midi_note']
-        positions = data['matrix_positions']
+        first_sensor = data.get('first_sensor')
+        second_sensor = data.get('second_sensor')
 
         # Convert expected note to C note name
         note_name = midi_note_to_c_name(expected_note)
 
-        for row, col in positions:
-            note_map[row][col] = note_name
+        # Map first sensor position (now a tuple of (note, channel))
+        if first_sensor is not None:
+            note, ch = first_sensor
+            pos = note_to_matrix_position(note, ch)
+            if pos:
+                row, col = pos
+                first_sensor_map[row][col] = note_name
+
+        # Map second sensor position (now a tuple of (note, channel))
+        if second_sensor is not None:
+            note, ch = second_sensor
+            pos = note_to_matrix_position(note, ch)
+            if pos:
+                row, col = pos
+                second_sensor_map[row][col] = note_name
 
     # Generate C code
     with open(output_file, 'w') as f:
         f.write("/*\n")
-        f.write(" * Auto-generated functional note_map array\n")
+        f.write(" * Auto-generated note_map arrays for velocity sensing\n")
         f.write(" * Generated by tools/map_keys.py\n")
+        f.write(" * \n")
+        f.write(" * TWO ARRAYS:\n")
+        f.write(" * - first_sensor_map: Matrix positions for first sensor (top sensor)\n")
+        f.write(" * - second_sensor_map: Matrix positions for second sensor (bottom sensor)\n")
         f.write(" * \n")
         f.write(" * INSTRUCTIONS:\n")
         f.write(" * 1. Review this mapping\n")
-        f.write(" * 2. Copy the array below\n")
-        f.write(" * 3. Paste into note_map.h (replace functional mapping section)\n")
-        f.write(" * 4. Comment out #define DEBUG_MAPPING in note_map.h\n")
-        f.write(" * 5. Rebuild and flash firmware\n")
+        f.write(" * 2. Copy both arrays into note_map.h\n")
+        f.write(" * 3. Comment out #define DEBUG_MAPPING in note_map.h\n")
+        f.write(" * 4. Rebuild and flash firmware\n")
         f.write(" */\n\n")
 
-        f.write("static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {\n")
+        # First sensor array
+        f.write("// First sensor (triggers first when key is pressed)\n")
+        f.write("static const uint8_t first_sensor_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {\n")
         f.write("    //           Col:     0         1         2         3         4         5         6         7         8         9         10        11\n")
         f.write("    //           GPIO:   12        13        14        15        16        17        18        19        20        21        22        26\n")
 
         for row in range(12):
-            # Format row
-            row_values = ", ".join([f"{note_map[row][col]:>9}" for col in range(12)])
+            row_values = ", ".join([f"{first_sensor_map[row][col]:>9}" for col in range(12)])
+            f.write(f"    /* Row {row:2d}*/  {{ {row_values} }}")
+            if row < 11:
+                f.write(",")
+            f.write("\n")
+
+        f.write("};\n\n")
+
+        # Second sensor array
+        f.write("// Second sensor (triggers after first sensor)\n")
+        f.write("static const uint8_t second_sensor_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {\n")
+        f.write("    //           Col:     0         1         2         3         4         5         6         7         8         9         10        11\n")
+        f.write("    //           GPIO:   12        13        14        15        16        17        18        19        20        21        22        26\n")
+
+        for row in range(12):
+            row_values = ", ".join([f"{second_sensor_map[row][col]:>9}" for col in range(12)])
             f.write(f"    /* Row {row:2d}*/  {{ {row_values} }}")
             if row < 11:
                 f.write(",")

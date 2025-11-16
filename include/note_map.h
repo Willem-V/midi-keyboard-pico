@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 // Uncomment to enable DEBUG mode (sequential note mapping for testing)
-// #define DEBUG_MAPPING
+#define DEBUG_MAPPING
 
 // Total matrix dimensions
 #define NUM_DRIVE_PINS  12  // GPIO 0-11
@@ -175,6 +175,26 @@
 #define Fs9  126
 #define G9   127  // Highest MIDI note
 
+// Octave 10 (Extended for DEBUG mode - sent on MIDI channel 1)
+#define C10  128
+#define Cs10 129
+#define D10  130
+#define Ds10 131
+#define E10  132
+#define F10  133
+#define Fs10 134
+#define G10  135
+#define Gs10 136
+#define A10  137
+#define As10 138
+#define B10  139
+
+// Octave 11 (Extended for DEBUG mode - sent on MIDI channel 1)
+#define C11  140
+#define Cs11 141
+#define D11  142
+#define Ds11 143
+
 /*
  * Note mapping array: note_map[drive_pin][read_pin] = MIDI_note
  *
@@ -235,8 +255,8 @@ static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
     /* Row 7 */  {   C6,   Cs6,    D6,   Ds6,    E6,    F6,   Fs6,    G6,   Gs6,    A6,   As6,    B6  },  // 84-95
     /* Row 8 */  {   C7,   Cs7,    D7,   Ds7,    E7,    F7,   Fs7,    G7,   Gs7,    A7,   As7,    B7  },  // 96-107
     /* Row 9 */  {   C8,   Cs8,    D8,   Ds8,    E8,    F8,   Fs8,    G8,   Gs8,    A8,   As8,    B8  },  // 108-119
-    /* Row 10*/  {   C9,   Cs9,    D9,   Ds9,    E9,    F9,   Fs9,    G9,   C_1,  Cs_1,   D_1,  Ds_1  },  // 120-127, 0-3
-    /* Row 11*/  {  E_1,   F_1,  Fs_1,   G_1,  Gs_1,   A_1,  As_1,   B_1,    C0,   Cs0,    D0,   Ds0  }   // 4-15
+    /* Row 10*/  {   C9,   Cs9,    D9,   Ds9,    E9,    F9,   Fs9,    G9,  C10, Cs10,  D10, Ds10  },  // 120-131
+    /* Row 11*/  { E10,  F10, Fs10,  G10, Gs10,  A10, As10,  B10,  C11, Cs11,  D11, Ds11  }   // 132-143
 };
 
 #else
@@ -264,6 +284,42 @@ static const uint8_t note_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
     /* Row 11*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE }
 };
 #endif
+
+// First sensor (triggers first when key is pressed)
+static const uint8_t first_sensor_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
+    //           Col:     0         1         2         3         4         5         6         7         8         9         10        11
+    //           GPIO:   12        13        14        15        16        17        18        19        20        21        22        26
+    /* Row  0*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  1*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  2*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  3*/  {       Fs4,        C4,       Fs5,        C6,       Fs6,        C7,        C5,        C2,       Fs2,        C3,       Fs3, NOTE_NONE },
+    /* Row  4*/  {        E4,       As3,        E5,       As5,        E6,       As6,       As4, NOTE_NONE,        E2,       As2,        E3, NOTE_NONE },
+    /* Row  5*/  {        D4,       Gs3,        D5,       Gs5,        D6,       Gs6,       Gs4, NOTE_NONE,        D2,       Gs2,        D3, NOTE_NONE },
+    /* Row  6*/  {       Cs4,        G3,       Cs5,        G5,       Cs6,        G6,        G4, NOTE_NONE,       Cs2,        G2,       Cs3, NOTE_NONE },
+    /* Row  7*/  {       Ds4,        A3,       Ds5,        A5,       Ds6,        A6,        A4, NOTE_NONE,       Ds2,        A2,       Ds3, NOTE_NONE },
+    /* Row  8*/  {        F4,        B3,        F5,        B5,        F6,        B6,        B4, NOTE_NONE,        F2,        B2,        F3, NOTE_NONE },
+    /* Row  9*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row 10*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row 11*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE }
+};
+
+// Second sensor (triggers after first sensor)
+static const uint8_t second_sensor_map[NUM_DRIVE_PINS][NUM_READ_PINS] = {
+    //           Col:     0         1         2         3         4         5         6         7         8         9         10        11
+    //           GPIO:   12        13        14        15        16        17        18        19        20        21        22        26
+    /* Row  0*/  {       Fs4,        C4,       Fs5,        C6,       Fs6,        C7,        C5,        C2,       Fs2,        C3,       Fs3, NOTE_NONE },
+    /* Row  1*/  {        E4,       As3,        E5,       As5,        E6,       As6,       As4, NOTE_NONE,        E2,       As2,        E3, NOTE_NONE },
+    /* Row  2*/  {        D4,       Gs3,        D5,       Gs5,        D6,       Gs6,       Gs4, NOTE_NONE,        D2,       Gs2,        D3, NOTE_NONE },
+    /* Row  3*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  4*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  5*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  6*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  7*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  8*/  { NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE, NOTE_NONE },
+    /* Row  9*/  {       Cs4,        G3,       Cs5,        G5,       Cs6,        G6,        G4, NOTE_NONE,       Cs2,        G2,       Cs3, NOTE_NONE },
+    /* Row 10*/  {       Ds4,        A3,       Ds5,        A5,       Ds6,        A6,        A4, NOTE_NONE,       Ds2,        A2,       Ds3, NOTE_NONE },
+    /* Row 11*/  {        F4,        B3,        F5,        B5,        F6,        B6,        B4, NOTE_NONE,        F2,        B2,        F3, NOTE_NONE }
+};
 
 /*
  * Helper function to get MIDI note from matrix position
